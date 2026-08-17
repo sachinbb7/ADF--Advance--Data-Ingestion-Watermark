@@ -61,7 +61,7 @@
 										"value": "customers",
 										"activities": [
 											{
-												"name": "copy customers data",
+												"name": "customers data",
 												"type": "Copy",
 												"dependsOn": [],
 												"policy": {
