@@ -47,7 +47,7 @@ CREATE TABLE dbo.payments_returns
 
 --------------------------------------------------------------
 
-15-Aug initial load
+#15-Aug initial load
     
 INSERT INTO dbo.orders
 (
@@ -108,7 +108,7 @@ VALUES
 
 ---------------------------------------------------------------------------------------
 
-16-Aug first_load
+#16-Aug first_load
 
 INSERT INTO dbo.orders
 (
@@ -167,7 +167,7 @@ VALUES
 ('QB1020','UPI','Paid','Not Returned',0);
 
 ----------------------------------------------------------------------------------------
-17-Aug second_load
+#17-Aug second_load
     
 INSERT INTO dbo.orders
 (
@@ -217,3 +217,44 @@ VALUES
 ('QB1025','Credit Card','Paid','Not Returned',0),
 
 ('QB1026','UPI','Paid','Not Returned',0);
+
+
+
+---------------------------------------------------------------
+
+
+#Create Tabel and Stored Procedure to Log Watermark
+
+CREATE TABLE dbo.etl_watermark
+(
+    id                          INT IDENTITY(1,1) PRIMARY KEY,
+    source_name                 VARCHAR(50) NOT NULL,
+    last_processed_timestamp    DATETIME2(7) NOT NULL,
+    created_on                  DATETIME2(7) NOT NULL
+        DEFAULT SYSUTCDATETIME()
+);
+
+
+CREATE OR ALTER PROCEDURE dbo.usp_log_watermark
+(
+    @source_name                 VARCHAR(50),
+    @last_processed_timestamp    DATETIME2(7)
+)
+AS
+BEGIN
+
+    SET NOCOUNT ON;
+
+    INSERT INTO dbo.etl_watermark
+    (
+        source_name,
+        last_processed_timestamp
+    )
+    VALUES
+    (
+        @source_name,
+        @last_processed_timestamp
+    );
+
+END;
+
