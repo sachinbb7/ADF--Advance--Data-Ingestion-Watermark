@@ -1,0 +1,31 @@
+{
+	"name": "ds_SQL_ADLS",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "ls_sql",
+			"type": "LinkedServiceReference"
+		},
+		"parameters": {
+			"ds_table": {
+				"type": "string"
+			},
+			"ds_folder": {
+				"type": "string"
+			}
+		},
+		"annotations": [],
+		"type": "AzureSqlTable",
+		"schema": [],
+		"typeProperties": {
+			"schema": {
+				"value": "@dataset().ds_folder",
+				"type": "Expression"
+			},
+			"table": {
+				"value": "@dataset().ds_table",
+				"type": "Expression"
+			}
+		}
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
+}

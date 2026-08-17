@@ -1,0 +1,15 @@
+{
+	"name": "df-QuickBasket",
+	"properties": {
+		"trustModeClaimForMi": {
+			"value": "Disabled",
+			"editable": true
+		}
+	},
+	"location": "southeastasia",
+	"identity": {
+		"type": "SystemAssigned",
+		"principalId": "571aad9f-6a52-4e39-8240-6b706a0ed85b",
+		"tenantId": "e76ed5b6-2ac0-4df3-8a90-a1e53dfdfd6a"
+	}
+}

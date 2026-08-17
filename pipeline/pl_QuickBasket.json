@@ -1,0 +1,481 @@
+{
+	"name": "pl_QuickBasket",
+	"properties": {
+		"activities": [
+			{
+				"name": "Lookup for sql tables",
+				"type": "Lookup",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"source": {
+						"type": "AzureSqlSource",
+						"sqlReaderQuery": "SELECT TABLE_SCHEMA, TABLE_NAME\nFROM INFORMATION_SCHEMA.TABLES\nWHERE TABLE_SCHEMA = 'dbo' AND TABLE_TYPE = 'BASE TABLE'",
+						"queryTimeout": "02:00:00",
+						"partitionOption": "None"
+					},
+					"dataset": {
+						"referenceName": "ds_lookup",
+						"type": "DatasetReference"
+					},
+					"firstRowOnly": false
+				}
+			},
+			{
+				"name": "ForEach",
+				"type": "ForEach",
+				"dependsOn": [
+					{
+						"activity": "Filter",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"items": {
+						"value": "@activity('Filter').output.value",
+						"type": "Expression"
+					},
+					"activities": [
+						{
+							"name": "Switch",
+							"type": "Switch",
+							"dependsOn": [],
+							"userProperties": [],
+							"typeProperties": {
+								"on": {
+									"value": "@item().TABLE_NAME",
+									"type": "Expression"
+								},
+								"cases": [
+									{
+										"value": "customers",
+										"activities": [
+											{
+												"name": "copy customers data",
+												"type": "Copy",
+												"dependsOn": [],
+												"policy": {
+													"timeout": "0.12:00:00",
+													"retry": 0,
+													"retryIntervalInSeconds": 30,
+													"secureOutput": false,
+													"secureInput": false
+												},
+												"userProperties": [],
+												"typeProperties": {
+													"source": {
+														"type": "AzureSqlSource",
+														"queryTimeout": "02:00:00",
+														"partitionOption": "None"
+													},
+													"sink": {
+														"type": "DelimitedTextSink",
+														"storeSettings": {
+															"type": "AzureBlobFSWriteSettings",
+															"copyBehavior": "PreserveHierarchy"
+														},
+														"formatSettings": {
+															"type": "DelimitedTextWriteSettings",
+															"quoteAllText": true,
+															"fileExtension": ".txt"
+														}
+													},
+													"enableStaging": false,
+													"translator": {
+														"type": "TabularTranslator",
+														"typeConversion": true,
+														"typeConversionSettings": {
+															"allowDataTruncation": true,
+															"treatBooleanAsNumber": false
+														}
+													}
+												},
+												"inputs": [
+													{
+														"referenceName": "ds_sql",
+														"type": "DatasetReference",
+														"parameters": {
+															"ds_schema": {
+																"value": "@item().TABLE_SCHEMA",
+																"type": "Expression"
+															},
+															"ds_table": {
+																"value": "@item().TABLE_NAME",
+																"type": "Expression"
+															}
+														}
+													}
+												],
+												"outputs": [
+													{
+														"referenceName": "ds_adls",
+														"type": "DatasetReference",
+														"parameters": {
+															"ds_folder": {
+																"value": "@item().TABLE_NAME",
+																"type": "Expression"
+															},
+															"ds_table": {
+																"value": "@concat(item().TABLE_NAME, '.csv')",
+																"type": "Expression"
+															}
+														}
+													}
+												]
+											}
+										]
+									},
+									{
+										"value": "products",
+										"activities": [
+											{
+												"name": "copy products data",
+												"type": "Copy",
+												"dependsOn": [],
+												"policy": {
+													"timeout": "0.12:00:00",
+													"retry": 0,
+													"retryIntervalInSeconds": 30,
+													"secureOutput": false,
+													"secureInput": false
+												},
+												"userProperties": [],
+												"typeProperties": {
+													"source": {
+														"type": "AzureSqlSource",
+														"queryTimeout": "02:00:00",
+														"partitionOption": "None"
+													},
+													"sink": {
+														"type": "DelimitedTextSink",
+														"storeSettings": {
+															"type": "AzureBlobFSWriteSettings",
+															"copyBehavior": "PreserveHierarchy"
+														},
+														"formatSettings": {
+															"type": "DelimitedTextWriteSettings",
+															"quoteAllText": true,
+															"fileExtension": ".txt"
+														}
+													},
+													"enableStaging": false,
+													"translator": {
+														"type": "TabularTranslator",
+														"typeConversion": true,
+														"typeConversionSettings": {
+															"allowDataTruncation": true,
+															"treatBooleanAsNumber": false
+														}
+													}
+												},
+												"inputs": [
+													{
+														"referenceName": "ds_sql",
+														"type": "DatasetReference",
+														"parameters": {
+															"ds_schema": {
+																"value": "@item().TABLE_SCHEMA",
+																"type": "Expression"
+															},
+															"ds_table": {
+																"value": "@item().TABLE_NAME",
+																"type": "Expression"
+															}
+														}
+													}
+												],
+												"outputs": [
+													{
+														"referenceName": "ds_adls",
+														"type": "DatasetReference",
+														"parameters": {
+															"ds_folder": {
+																"value": "@item().TABLE_NAME",
+																"type": "Expression"
+															},
+															"ds_table": {
+																"value": "@concat(item().TABLE_NAME, '.csv')",
+																"type": "Expression"
+															}
+														}
+													}
+												]
+											}
+										]
+									},
+									{
+										"value": "payments_returns",
+										"activities": [
+											{
+												"name": "copy payment_returns data",
+												"type": "Copy",
+												"dependsOn": [],
+												"policy": {
+													"timeout": "0.12:00:00",
+													"retry": 0,
+													"retryIntervalInSeconds": 30,
+													"secureOutput": false,
+													"secureInput": false
+												},
+												"userProperties": [],
+												"typeProperties": {
+													"source": {
+														"type": "AzureSqlSource",
+														"queryTimeout": "02:00:00",
+														"partitionOption": "None"
+													},
+													"sink": {
+														"type": "DelimitedTextSink",
+														"storeSettings": {
+															"type": "AzureBlobFSWriteSettings",
+															"copyBehavior": "PreserveHierarchy"
+														},
+														"formatSettings": {
+															"type": "DelimitedTextWriteSettings",
+															"quoteAllText": true,
+															"fileExtension": ".txt"
+														}
+													},
+													"enableStaging": false,
+													"translator": {
+														"type": "TabularTranslator",
+														"typeConversion": true,
+														"typeConversionSettings": {
+															"allowDataTruncation": true,
+															"treatBooleanAsNumber": false
+														}
+													}
+												},
+												"inputs": [
+													{
+														"referenceName": "ds_sql",
+														"type": "DatasetReference",
+														"parameters": {
+															"ds_schema": {
+																"value": "@item().TABLE_SCHEMA",
+																"type": "Expression"
+															},
+															"ds_table": {
+																"value": "@item().TABLE_NAME",
+																"type": "Expression"
+															}
+														}
+													}
+												],
+												"outputs": [
+													{
+														"referenceName": "ds_adls",
+														"type": "DatasetReference",
+														"parameters": {
+															"ds_folder": {
+																"value": "@item().TABLE_NAME",
+																"type": "Expression"
+															},
+															"ds_table": {
+																"value": "@concat(item().TABLE_NAME, '.csv')",
+																"type": "Expression"
+															}
+														}
+													}
+												]
+											}
+										]
+									},
+									{
+										"value": "orders",
+										"activities": [
+											{
+												"name": "copy orders data",
+												"type": "Copy",
+												"dependsOn": [],
+												"policy": {
+													"timeout": "0.12:00:00",
+													"retry": 0,
+													"retryIntervalInSeconds": 30,
+													"secureOutput": false,
+													"secureInput": false
+												},
+												"userProperties": [],
+												"typeProperties": {
+													"source": {
+														"type": "AzureSqlSource",
+														"queryTimeout": "02:00:00",
+														"partitionOption": "None"
+													},
+													"sink": {
+														"type": "DelimitedTextSink",
+														"storeSettings": {
+															"type": "AzureBlobFSWriteSettings",
+															"copyBehavior": "PreserveHierarchy"
+														},
+														"formatSettings": {
+															"type": "DelimitedTextWriteSettings",
+															"quoteAllText": true,
+															"fileExtension": ".txt"
+														}
+													},
+													"enableStaging": false,
+													"translator": {
+														"type": "TabularTranslator",
+														"typeConversion": true,
+														"typeConversionSettings": {
+															"allowDataTruncation": true,
+															"treatBooleanAsNumber": false
+														}
+													}
+												},
+												"inputs": [
+													{
+														"referenceName": "ds_sql",
+														"type": "DatasetReference",
+														"parameters": {
+															"ds_schema": {
+																"value": "@item().TABLE_SCHEMA",
+																"type": "Expression"
+															},
+															"ds_table": {
+																"value": "@item().TABLE_NAME",
+																"type": "Expression"
+															}
+														}
+													}
+												],
+												"outputs": [
+													{
+														"referenceName": "ds_adls",
+														"type": "DatasetReference",
+														"parameters": {
+															"ds_folder": {
+																"value": "@item().TABLE_NAME",
+																"type": "Expression"
+															},
+															"ds_table": {
+																"value": "@concat(item().TABLE_NAME,formatDateTime(utcNow(), 'yyyyMMdd'),'.csv')",
+																"type": "Expression"
+															}
+														}
+													}
+												]
+											}
+										]
+									}
+								],
+								"defaultActivities": [
+									{
+										"name": "Default placeholder",
+										"type": "SetVariable",
+										"dependsOn": [],
+										"policy": {
+											"secureOutput": false,
+											"secureInput": false
+										},
+										"userProperties": [],
+										"typeProperties": {
+											"variableName": "placeholder",
+											"value": "Ignore"
+										}
+									}
+								]
+							}
+						},
+						{
+							"name": "HWM",
+							"type": "SqlServerStoredProcedure",
+							"state": "Inactive",
+							"onInactiveMarkAs": "Succeeded",
+							"dependsOn": [
+								{
+									"activity": "Switch",
+									"dependencyConditions": [
+										"Succeeded"
+									]
+								}
+							],
+							"policy": {
+								"timeout": "0.12:00:00",
+								"retry": 0,
+								"retryIntervalInSeconds": 30,
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"storedProcedureName": "[dbo].[usp_log_watermark]",
+								"storedProcedureParameters": {
+									"last_processed_timestamp": {
+										"value": "",
+										"type": "DateTime"
+									},
+									"source_name": {
+										"value": {
+											"value": "@pipeline().parameters.pl_table",
+											"type": "Expression"
+										},
+										"type": "String"
+									}
+								}
+							},
+							"linkedServiceName": {
+								"referenceName": "ls_sql",
+								"type": "LinkedServiceReference"
+							}
+						}
+					]
+				}
+			},
+			{
+				"name": "Filter",
+				"type": "Filter",
+				"dependsOn": [
+					{
+						"activity": "Lookup for sql tables",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"items": {
+						"value": "@activity('Lookup for sql tables').output.value",
+						"type": "Expression"
+					},
+					"condition": {
+						"value": "@not(startswith(item().TABLE_NAME, 'etl_watermark'))",
+						"type": "Expression"
+					}
+				}
+			}
+		],
+		"parameters": {
+			"pl_folder": {
+				"type": "string"
+			},
+			"pl_schema": {
+				"type": "string",
+				"defaultValue": "dbo"
+			},
+			"pl_table": {
+				"type": "string"
+			}
+		},
+		"variables": {
+			"placeholder": {
+				"type": "String"
+			}
+		},
+		"annotations": [],
+		"lastPublishTime": "2026-08-17T13:08:59Z"
+	},
+	"type": "Microsoft.DataFactory/factories/pipelines"
+}
