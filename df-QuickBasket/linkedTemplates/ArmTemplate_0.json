@@ -732,48 +732,6 @@
 											}
 										]
 									}
-								},
-								{
-									"name": "HWM",
-									"type": "SqlServerStoredProcedure",
-									"state": "Inactive",
-									"onInactiveMarkAs": "Succeeded",
-									"dependsOn": [
-										{
-											"activity": "Switch",
-											"dependencyConditions": [
-												"Succeeded"
-											]
-										}
-									],
-									"policy": {
-										"timeout": "0.12:00:00",
-										"retry": 0,
-										"retryIntervalInSeconds": 30,
-										"secureOutput": false,
-										"secureInput": false
-									},
-									"userProperties": [],
-									"typeProperties": {
-										"storedProcedureName": "[[dbo].[usp_log_watermark]",
-										"storedProcedureParameters": {
-											"last_processed_timestamp": {
-												"value": "",
-												"type": "DateTime"
-											},
-											"source_name": {
-												"value": {
-													"value": "@pipeline().parameters.pl_table",
-													"type": "Expression"
-												},
-												"type": "String"
-											}
-										}
-									},
-									"linkedServiceName": {
-										"referenceName": "ls_sql",
-										"type": "LinkedServiceReference"
-									}
 								}
 							]
 						}
@@ -827,9 +785,9 @@
 			},
 			"dependsOn": [
 				"[concat(variables('factoryId'), '/datasets/ds_lookup')]",
-				"[concat(variables('factoryId'), '/linkedServices/ls_sql')]",
 				"[concat(variables('factoryId'), '/datasets/ds_sql')]",
-				"[concat(variables('factoryId'), '/datasets/ds_adls')]"
+				"[concat(variables('factoryId'), '/datasets/ds_adls')]",
+				"[concat(variables('factoryId'), '/linkedServices/ls_sql')]"
 			]
 		}
 	]
