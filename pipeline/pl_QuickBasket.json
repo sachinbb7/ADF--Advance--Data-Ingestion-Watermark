@@ -297,7 +297,20 @@
 											{
 												"name": "copy orders data",
 												"type": "Copy",
-												"dependsOn": [],
+												"dependsOn": [
+													{
+														"activity": "Previous- orders_HWM",
+														"dependencyConditions": [
+															"Succeeded"
+														]
+													},
+													{
+														"activity": "Lookup for new record max date",
+														"dependencyConditions": [
+															"Succeeded"
+														]
+													}
+												],
 												"policy": {
 													"timeout": "0.12:00:00",
 													"retry": 0,
@@ -309,6 +322,10 @@
 												"typeProperties": {
 													"source": {
 														"type": "AzureSqlSource",
+														"sqlReaderQuery": {
+															"value": "SELECT * FROM dbo.orders WHERE last_updated_date > '@{activity('Previous- orders_HWM').output.firstRow.prev_wm}'",
+															"type": "Expression"
+														},
 														"queryTimeout": "02:00:00",
 														"partitionOption": "None"
 													},
@@ -360,12 +377,164 @@
 																"type": "Expression"
 															},
 															"ds_table": {
-																"value": "@concat(item().TABLE_NAME,formatDateTime(utcNow(), 'yyyyMMdd'),'.csv')",
+																"value": "@concat(item().TABLE_NAME,formatDateTime(activity('Lookup for new record max date').output.firstRow.latest_updated_date, 'yyyyMMdd'),'.csv')",
 																"type": "Expression"
 															}
 														}
 													}
 												]
+											},
+											{
+												"name": "Update - orders_HWM",
+												"type": "SqlServerStoredProcedure",
+												"dependsOn": [
+													{
+														"activity": "orders- last updated",
+														"dependencyConditions": [
+															"Succeeded"
+														]
+													}
+												],
+												"policy": {
+													"timeout": "0.12:00:00",
+													"retry": 0,
+													"retryIntervalInSeconds": 30,
+													"secureOutput": false,
+													"secureInput": false
+												},
+												"userProperties": [],
+												"typeProperties": {
+													"storedProcedureName": "[dbo].[usp_log_watermark]",
+													"storedProcedureParameters": {
+														"last_processed_timestamp": {
+															"value": {
+																"value": "@activity('orders- last updated').output.resultSets[0].rows[0].nwm",
+																"type": "Expression"
+															},
+															"type": "DateTime"
+														},
+														"source_name": {
+															"value": {
+																"value": "@item().TABLE_NAME",
+																"type": "Expression"
+															},
+															"type": "String"
+														}
+													}
+												},
+												"linkedServiceName": {
+													"referenceName": "ls_sql",
+													"type": "LinkedServiceReference"
+												}
+											},
+											{
+												"name": "orders- last updated",
+												"type": "Script",
+												"dependsOn": [
+													{
+														"activity": "copy orders data",
+														"dependencyConditions": [
+															"Succeeded"
+														]
+													}
+												],
+												"policy": {
+													"timeout": "0.12:00:00",
+													"retry": 0,
+													"retryIntervalInSeconds": 30,
+													"secureOutput": false,
+													"secureInput": false
+												},
+												"userProperties": [],
+												"linkedServiceName": {
+													"referenceName": "ls_sql",
+													"type": "LinkedServiceReference"
+												},
+												"typeProperties": {
+													"scripts": [
+														{
+															"type": "Query",
+															"text": {
+																"value": "SELECT max(last_updated_date) as nwm \nFROM dbo.orders",
+																"type": "Expression"
+															}
+														}
+													],
+													"scriptBlockExecutionTimeout": "02:00:00"
+												}
+											},
+											{
+												"name": "Previous- orders_HWM",
+												"type": "Lookup",
+												"dependsOn": [],
+												"policy": {
+													"timeout": "0.12:00:00",
+													"retry": 0,
+													"retryIntervalInSeconds": 30,
+													"secureOutput": false,
+													"secureInput": false
+												},
+												"userProperties": [],
+												"typeProperties": {
+													"source": {
+														"type": "AzureSqlSource",
+														"sqlReaderQuery": {
+															"value": "SELECT max(last_processed_timestamp) as prev_wm\nFROM etl_watermark",
+															"type": "Expression"
+														},
+														"queryTimeout": "02:00:00",
+														"partitionOption": "None"
+													},
+													"dataset": {
+														"referenceName": "ds_sql",
+														"type": "DatasetReference",
+														"parameters": {
+															"ds_schema": {
+																"value": "@item().TABLE_SCHEMA",
+																"type": "Expression"
+															},
+															"ds_table": "etl_watermark"
+														}
+													}
+												}
+											},
+											{
+												"name": "Lookup for new record max date",
+												"type": "Lookup",
+												"dependsOn": [],
+												"policy": {
+													"timeout": "0.12:00:00",
+													"retry": 0,
+													"retryIntervalInSeconds": 30,
+													"secureOutput": false,
+													"secureInput": false
+												},
+												"userProperties": [],
+												"typeProperties": {
+													"source": {
+														"type": "AzureSqlSource",
+														"sqlReaderQuery": {
+															"value": "SELECT max(last_updated_date) as latest_updated_date\nFROM @{item().TABLE_SCHEMA}.@{item().TABLE_NAME}",
+															"type": "Expression"
+														},
+														"queryTimeout": "02:00:00",
+														"partitionOption": "None"
+													},
+													"dataset": {
+														"referenceName": "ds_sql",
+														"type": "DatasetReference",
+														"parameters": {
+															"ds_schema": {
+																"value": "@item().TABLE_SCHEMA",
+																"type": "Expression"
+															},
+															"ds_table": {
+																"value": "@item().TABLE_NAME",
+																"type": "Expression"
+															}
+														}
+													}
+												}
 											}
 										]
 									}
