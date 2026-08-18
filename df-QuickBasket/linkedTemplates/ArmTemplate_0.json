@@ -553,7 +553,7 @@
 																		"type": "Expression"
 																	},
 																	"ds_table": {
-																		"value": "@concat(item().TABLE_NAME,formatDateTime(activity('Lookup for new record max date').output.firstRow.latest_updated_date, 'yyyyMMdd'),'.csv')",
+																		"value": "@concat(item().TABLE_NAME,'_',formatDateTime(activity('Lookup for new record max date').output.firstRow.latest_updated_date, 'yyyyMMdd'),'.csv')",
 																		"type": "Expression"
 																	}
 																}
